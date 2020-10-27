@@ -1,1 +1,1 @@
-# embeded-validation
+# embedded-validation
