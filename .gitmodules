@@ -1,3 +1,7 @@
 [submodule "lib/duktape"]
 	path = lib/duktape
 	url = git://github.com/svaarala/duktape-releases.git
+
+[submodule "tests/lib/unity"]
+	path = tests/lib/unity
+	url = https://github.com/ThrowTheSwitch/Unity
