@@ -89,7 +89,6 @@ void test_that_json_file_can_be_read(void)
     //GIVEN
     duk_context *ctx = create_heap_default();
     init_duktape_context(ctx, NULL);
-
     //WHEN
     read_json_file(ctx, "./testdata/config.json");
 
@@ -99,7 +98,7 @@ void test_that_json_file_can_be_read(void)
     //we extract a propery value from it and put it on the stack
     duk_get_prop_string(ctx, 0, "id");
     //we check the extracted property
-    TEST_ASSERT_EQUAL_STRING("di124", duk_get_string(ctx, -1));
+    TEST_ASSERT_EQUAL_STRING("whatever", duk_get_string(ctx, -1));
 }
 
 void test_that_js_file_can_be_read(void)
@@ -112,7 +111,7 @@ void test_that_js_file_can_be_read(void)
     evaluate_js_file(ctx, "./testdata/example.js");
 
     //THEN
-    TEST_ASSERT_EQUAL_STRING("result", duk_get_string(ctx, -1));
+    TEST_ASSERT_EQUAL_STRING("dist", duk_get_string(ctx, -1));
 }
 
 
@@ -160,5 +159,6 @@ int main(void)
     RUN_TEST(test_that_js_file_can_be_read);
 
     UnityEnd();
+
     return 0;
 }

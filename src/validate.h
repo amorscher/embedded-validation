@@ -4,6 +4,7 @@
 #define VALIDATE
 
 duk_ret_t read_json_file(duk_context *ctx, char *filename);
+duk_ret_t evaluate_js_file(duk_context *ctx, char *filename);
 
 duk_ret_t init_duktape_context(duk_context *ctx,void *udata);
 

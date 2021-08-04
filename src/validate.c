@@ -52,7 +52,7 @@ duk_ret_t init_duktape_context(duk_context *ctx, void *udata)
     return 0;
 }
 
-static duk_ret_t read_file(char **content, char *filename)
+static duk_ret_t read_file(char **content, char *filename, int* length)
 {
     FILE *f = NULL;
     f = fopen(filename, "rb");
@@ -80,7 +80,8 @@ static duk_ret_t read_file(char **content, char *filename)
     {
         return -1;
     }
-    got = fread((void *) *content, (size_t) 1, (size_t) len, f);
+    got = fread((void *)*content, (size_t)1, (size_t)len, f);
+    *length = got;
 
     fclose(f);
 
@@ -90,12 +91,13 @@ static duk_ret_t read_file(char **content, char *filename)
 duk_ret_t read_json_file(duk_context *ctx, char *filename)
 {
     char *jsonData = NULL;
+    int length = 0;
     //read the file
-    int retValue = read_file(&jsonData, filename);
+    int retValue = read_file(&jsonData,filename, &length);
     if (retValue == 0)
     {
         //put the data to the value stack
-        duk_push_string(ctx, jsonData);
+        duk_push_lstring(ctx, jsonData,length);
         duk_json_decode(ctx, -1);
     }
     //free the data
@@ -103,4 +105,54 @@ duk_ret_t read_json_file(duk_context *ctx, char *filename)
     jsonData = NULL;
 
     return retValue;
+}
+
+duk_ret_t evaluate_js_file(duk_context *ctx, char *filename)
+{
+    char *jsCode = NULL;
+     int length = 0;
+    //read the file
+    int retValue = read_file(&jsCode, filename,&length);
+    if (retValue == 0)
+    {
+        int comp_flags = 0;
+        //put the data to the value stack
+        duk_push_lstring(ctx, jsCode,length);
+        duk_push_string(ctx, filename);
+         //free the data
+        free(jsCode);
+        jsCode = NULL;
+        //compile the code
+        duk_compile(ctx, comp_flags);
+        duk_push_global_object(ctx);
+
+        duk_insert(ctx, -2); /* [ ... global func ] */
+        duk_put_prop_string(ctx, -2, "_USERCODE");
+        duk_pop(ctx);
+        duk_eval_string(ctx,"_USERCODE();");
+    }
+   
+
+    return retValue;
+}
+
+
+static void print_error(duk_context *ctx, FILE *f) {
+	if (duk_is_object(ctx, -1) && duk_has_prop_string(ctx, -1, "stack")) {
+		/* XXX: print error objects specially */
+		/* XXX: pcall the string coercion */
+		duk_get_prop_string(ctx, -1, "stack");
+		if (duk_is_string(ctx, -1)) {
+			fprintf(f, "%s\n", duk_get_string(ctx, -1));
+			fflush(f);
+			duk_pop_2(ctx);
+			return;
+		} else {
+			duk_pop(ctx);
+		}
+	}
+	duk_to_string(ctx, -1);
+	fprintf(f, "%s\n", duk_get_string(ctx, -1));
+	fflush(f);
+	duk_pop(ctx);
 }
